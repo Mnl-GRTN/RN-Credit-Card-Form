@@ -15,13 +15,14 @@ export const CustomButton = ({title, onPress, colorList}) => {
 const styles = StyleSheet.create({
     pressable_button: {
         borderRadius: 8,
-        width:'80%',
+        width:'100%',
         height:40,
         display:'flex',
         justifyContent:'center',
         alignItems:'center',
         marginVertical: 12,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        alignSelf: 'center',
     },
 
     gradient_button: {
