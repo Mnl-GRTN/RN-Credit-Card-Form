@@ -26,7 +26,7 @@ export const CustomModal = ({handleOptionSelect, options, defaultValue}) => {
             borderColor: '#94c2dd',
             borderWidth: 1,
             borderRadius: 6,
-            paddingLeft: '3%',
+            paddingLeft: 8,
         },
         
         dropdown:{
