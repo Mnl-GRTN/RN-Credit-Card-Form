@@ -8,40 +8,76 @@ export default function App() {
   //Form States and Options
   const [month, setMonth] = useState('MM');
   const [year, setYear] = useState('YY');
-  const [cvv, setCvv] = useState('');
+  const [cvv, setCvv] = useState('XXX');
   const [cardHolder, setCardHolder] = useState('Name');
+  const [src , setSrc] = useState(require('./assets/Creditcard/visa.png'));
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
   const years = ["2023","2024","2025","2026","2027","2028","2029","2030","2031","2032","2033","2034"];
 
   // Special State for the card number to handle the inputs
-  const defaultCardNumber = '#### #### #### ####';
+  let defaultCardNumber = '#### #### #### ####';
   const [cardNumber, setCardNumber] = useState(defaultCardNumber);
 
-
-  const handleCardNumberInput = (cardNumberInput) => {
-    let updatedCardNumber = '';
-
-    // If the input length is less than the default card number length
-    if (cardNumberInput.length <= defaultCardNumber.length) {
-    let newCardIndex = 0;
-      
-    //Loop through the default card number and replace the '#' with the input
-    //If the input is empty, put '#' instead
-      for (let i = 0; i < defaultCardNumber.length; i++) {
-        if (defaultCardNumber[i] === '#') {
-          updatedCardNumber += cardNumberInput[newCardIndex] || '#';
-          newCardIndex++;
-        } else {
-          // If defaultCardNumber[i] is not '#', add it to the updatedCardNumber (to handle the spaces)
-          updatedCardNumber += defaultCardNumber[i];
-        }
+  // Function to handle mask and image of the card depending on the card number
+  const identifyCardType = (cardNumberInput) => {
+    const cardTypes = {
+      '34': { mask: '#### ###### #####', image: require('./assets/Creditcard/amex.png') },
+      '37': { mask: '#### ###### #####', image: require('./assets/Creditcard/amex.png') },
+      '4': { mask: '#### #### #### ####', image: require('./assets/Creditcard/visa.png') },
+      '5': { mask: '#### #### #### ####', image: require('./assets/Creditcard/mastercard.png') },
+      '6': { mask: '#### #### #### ####', image: require('./assets/Creditcard/discover.png') },
+      '30': { mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
+      '36': { mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
+      '38': { mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
+    };
+  
+    // Check the cardNumberInput firsts digits to identify the card type
+    const cardKeys = Object.keys(cardTypes);
+    for (let i = 0; i < cardKeys.length; i++) {
+      const cardKey = cardKeys[i];
+      if (cardNumberInput.startsWith(cardKey)) {
+        return cardTypes[cardKey];
       }
     }
-
-  
-    setCardNumber(updatedCardNumber);
+    // Default card type
+    return { mask: '#### #### #### ####', image: require('./assets/Creditcard/visa.png') };
   };
   
+
+  // Function to handle the card number input
+  const handleCardNumberInput = (cardNumberInput) => {
+    const regex = /^[0-9]*$/;
+    const { mask, image } = identifyCardType(cardNumberInput);
+    let updatedCardNumber = '';
+
+    if(regex.test(cardNumberInput)){
+    
+      for (let i = 0, j = 0; i < mask.length; i++) {
+        if (mask[i] === '#') {
+          updatedCardNumber += cardNumberInput[j] || '#';
+          j++;
+        } else {
+          updatedCardNumber += mask[i];
+        }
+      }
+    
+      setSrc(image);
+      setCardNumber(updatedCardNumber);
+    }
+  };
+  
+  // Function to handle the card holder input
+  const handleCardHolderInput = (cardHolderInput) => {
+    if (cardHolderInput === '') {
+      setCardHolder('Name');
+    }
+    else if (cardHolderInput.length > 15) {
+      setCardHolder(cardHolderInput.slice(0,15)+'...');
+    }
+    else{
+      setCardHolder(cardHolderInput);
+    }
+  };
 
   //Form Handlers
   const handleMonthsSelect = (index,value) => {
@@ -59,8 +95,6 @@ export default function App() {
   // useRef to keep the value of the animated value between renders
   const animatedValue = useRef(new Animated.Value(0)).current;
   
-
-
   // Function to rotate the card
   const rotateCard = (toValue) => {
     setvisibleOnCard(!visibleOnCard);
@@ -89,11 +123,16 @@ export default function App() {
         {/* ImageBackground to allow children */}
         <ImageBackground style={styles.cardimage} source={require('./assets/Creditcard/card.jpeg')}>
           {visibleOnCard && <Image source={require('./assets/Creditcard/chip.png')} style={styles.card_chip}></Image>}
+          {visibleOnCard && <Image source={src} style={styles.card_network}></Image>}
           {visibleOnCard && <Text style={styles.card_number}>{cardNumber}</Text>}
           {visibleOnCard && <Text style={styles.card_holder_label}>Card Holder</Text>}
           {visibleOnCard && <Text style={styles.card_holder}>{cardHolder}</Text>}
           {visibleOnCard && <Text style={styles.card_expiration_label}>Expires</Text>}
           {visibleOnCard && <Text style={styles.card_expiration}>{month}/{year}</Text>}
+          {visibleOnCard === false &&
+          <Animated.View style={[styles.card_container_cvv, {transform : [{rotateY}] }]}>
+            <Text style={styles.card_cvv}>CVV : {cvv}</Text>
+          </Animated.View>}
         </ImageBackground>
       </Animated.View>
 
@@ -104,10 +143,15 @@ export default function App() {
         style={styles.input}
         onChangeText={cardNumberInput => handleCardNumberInput(cardNumberInput)}
         autoComplete='cc-number'
-        inputMode='numeric'/>
+        inputMode='numeric'
+        keyboardType='numeric'
+        maxLength={16}/>
         
         <Text style={styles.form_text}>Card Holder</Text>
-        <TextInput style={styles.input} onChangeText={newCardHolder => setCardHolder(newCardHolder)}></TextInput>
+        <TextInput
+        style={styles.input}
+        onChangeText={newCardHolder => handleCardHolderInput(newCardHolder)}
+        autoComplete='family-name'/>
 
         <View style={styles.row}>
 
@@ -124,7 +168,14 @@ export default function App() {
 
           <View style={styles.form_cvv}>
             <Text style={styles.form_text}>CVV</Text>
-            <TextInput style={styles.inputCVV} onPressIn={() => {rotateCard(180)}} onEndEditing={() => {rotateCard(0)}}></TextInput>
+            <TextInput
+            style={styles.inputCVV}
+            onPressIn={() => {rotateCard(180)}}
+            onEndEditing={() => {rotateCard(0)}}
+            onChangeText={newCVV => setCvv(newCVV)}
+            inputMode='numeric'
+            keyboardType='numeric'
+            maxLength={3}/>
           </View>
 
         </View>
@@ -274,11 +325,20 @@ const styles = StyleSheet.create({
 
   card_chip:{
     position: 'absolute',
-    top: 0,
+    top: 16,
     left: 24,
     resizeMode: 'contain',
-    aspectRatio: 1.5,
-    width: '20%',
+    width: '25%',
+    height: '25%',
+  },
+
+  card_network:{
+    position: 'absolute',
+    top: 16,
+    right: 24,
+    resizeMode: 'contain',
+    width: '25%',
+    height: '25%',
   },
 
   card_number:{
@@ -288,4 +348,25 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+
+  card_container_cvv:{
+    position: 'absolute',
+    width: '90%',
+    height: '20%',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems:'flex-end',
+    paddingRight: 16,
+  },
+
+  card_cvv:{
+    fontSize: 14,
+    color: '#071a50',
+    fontWeight: '700',
+    letterSpacing: 1,
+  }
+
+
 });
