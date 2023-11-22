@@ -5,6 +5,5 @@ Credit card form with animation in React Native inspired by :
 
 Upgrade :
 
-* Better responsiveness
+* Responsiveness
 * Card chip not always placed correctly
-* Visibility of text when turning the card
