@@ -123,7 +123,7 @@ export default function App() {
         {/* ImageBackground to allow children */}
         <ImageBackground style={styles.cardimage} source={require('./assets/Creditcard/card.jpeg')}>
           {visibleOnCard && <Image source={require('./assets/Creditcard/chip.png')} style={styles.card_chip}></Image>}
-          {visibleOnCard && <Image source={src} style={styles.card_network}></Image>}
+          <Animated.Image source={src} style={[styles.card_network, {transform: [{rotateY}] } ]}></Animated.Image>
           {visibleOnCard && <Text style={styles.card_number}>{cardNumber}</Text>}
           {visibleOnCard && <Text style={styles.card_holder_label}>Card Holder</Text>}
           {visibleOnCard && <Text style={styles.card_holder}>{cardHolder}</Text>}
@@ -170,8 +170,8 @@ export default function App() {
             <Text style={styles.form_text}>CVV</Text>
             <TextInput
             style={styles.inputCVV}
-            onPressIn={() => {rotateCard(180)}}
-            onEndEditing={() => {rotateCard(0)}}
+            onFocus={() => {rotateCard(180)}}
+            onBlur={() => {rotateCard(0)}}
             onChangeText={newCVV => setCvv(newCVV)}
             inputMode='numeric'
             keyboardType='numeric'
