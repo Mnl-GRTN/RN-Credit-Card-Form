@@ -30,7 +30,7 @@ export default function App() {
       '36': { mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
       '38': { mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
     };
-  
+    
     // Check the cardNumberInput firsts digits to identify the card type
     const cardKeys = Object.keys(cardTypes);
     for (let i = 0; i < cardKeys.length; i++) {
