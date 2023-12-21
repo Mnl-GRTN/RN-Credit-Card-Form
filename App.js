@@ -20,44 +20,37 @@ export default function App() {
   const [cardNumber, setCardNumber] = useState(defaultCardNumber);
   const [cardNumberInputRef, setCardNumberRef] = useState(''); // Create a ref for card number input
 
+  // Card Types
+  const cardTypes = {
+    amex: { startPattern: /^(34|37)/, mask: '#### ###### #####', image: require('./assets/Creditcard/amex.png') },
+    visa: { startPattern: /^4/, mask: '#### #### #### ####', image: require('./assets/Creditcard/visa.png') },
+    mastercard: { startPattern: /^5[1-5]/, mask: '#### #### #### ####', image: require('./assets/Creditcard/mastercard.png') },
+    discover: { startPattern: /^6/, mask: '#### #### #### ####', image: require('./assets/Creditcard/discover.png') },
+    dinersclub: { startPattern: /^(30|36|38)/, mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
+  };
 
-  // Function to handle mask and image of the card depending on the card number
+  // Function to identify the card type
   const identifyCardType = (cardNumberInput) => {
-    const cardTypes = {
-      '34': { mask: '#### ###### #####', image: require('./assets/Creditcard/amex.png') },
-      '37': { mask: '#### ###### #####', image: require('./assets/Creditcard/amex.png') },
-      '4': { mask: '#### #### #### ####', image: require('./assets/Creditcard/visa.png') },
-      '5': { mask: '#### #### #### ####', image: require('./assets/Creditcard/mastercard.png') },
-      '6': { mask: '#### #### #### ####', image: require('./assets/Creditcard/discover.png') },
-      '30': { mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
-      '36': { mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
-      '38': { mask: '#### ###### #####', image: require('./assets/Creditcard/dinersclub.png') },
-    };
-    
-    // Check the cardNumberInput firsts digits to identify the card type
-    const cardKeys = Object.keys(cardTypes);
-    for (let i = 0; i < cardKeys.length; i++) {
-      const cardKey = cardKeys[i];
-      if (cardNumberInput.startsWith(cardKey)) {
-        return cardTypes[cardKey];
+    for (const type in cardTypes) {
+      // Check if the first digits match the card type
+      if (cardTypes[type].startPattern.test(cardNumberInput)) {
+        return cardTypes[type];
       }
     }
-    // Default card type
-    return { mask: '#### #### #### ####', image: require('./assets/Creditcard/visa.png') };
+    return { mask: '#### #### #### ####', image: require('./assets/Creditcard/visa.png') }; // Default card type
   };
   
-
+  // Function to handle the card number input
   const handleCardNumberInput = (cardNumberInput) => {
     const regex = /^[0-9]*$/;
-    const { mask, image } = identifyCardType(cardNumberInput);
+    const { mask, image } = identifyCardType(cardNumberInput.substring(0, 2)); // Check the first two digits
+  
     let updatedCardNumber = '';
     let formattedInput = '';
     let j = 0;
   
-    // Remove spaces from the cardNumberInput
     const cleanedCardNumberInput = cardNumberInput.replace(/\s/g, '');
   
-    // Check if the input is composed only of digits and spaces
     if (regex.test(cleanedCardNumberInput)) {
       for (let i = 0; i < mask.length; i++) {
         if (mask[i] === '#') {
@@ -70,26 +63,21 @@ export default function App() {
             formattedInput += cleanedCardNumberInput[j];
             j++;
           } else {
-            updatedCardNumber += '#'; // Placeholder if input is incomplete
+            updatedCardNumber += '#';
           }
         } else if (mask[i] === ' ') {
-          updatedCardNumber += ' '; // Add space to cardNumber according to the mask
-          formattedInput += ' '; // Add space to formattedInput for setCardNumberRef
+          updatedCardNumber += ' ';
+          formattedInput += ' ';
         }
       }
   
-      // Remove all characters except digits and spaces from formattedInput
       formattedInput = formattedInput.replace(/[^0-9\s]/g, '');
-  
-      // Trim trailing space if it's at the end of the input
       formattedInput = formattedInput.replace(/\s+$/, '');
   
-      // Set the src, updated card number, and formatted card number ref
       setSrc(image);
       setCardNumber(updatedCardNumber);
       setCardNumberRef(formattedInput);
     } else {
-      // If the input has characters that are not numbers, remove them
       setCardNumberRef(cardNumberInput.replace(/[^0-9]/g, ''));
     }
   };
