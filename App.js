@@ -9,6 +9,7 @@ export default function App() {
   const [month, setMonth] = useState('MM');
   const [year, setYear] = useState('YY');
   const [cvv, setCvv] = useState('XXX');
+  const [cvvInput, setCvvInput] = useState('');
   const [cardHolder, setCardHolder] = useState('Name');
   const [src , setSrc] = useState(require('./assets/Creditcard/visa.png'));
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
@@ -17,6 +18,8 @@ export default function App() {
   // Special State for the card number to handle the inputs
   let defaultCardNumber = '#### #### #### ####';
   const [cardNumber, setCardNumber] = useState(defaultCardNumber);
+  const [cardNumberInputRef, setCardNumberRef] = useState(''); // Create a ref for card number input
+
 
   // Function to handle mask and image of the card depending on the card number
   const identifyCardType = (cardNumberInput) => {
@@ -44,26 +47,63 @@ export default function App() {
   };
   
 
-  // Function to handle the card number input
   const handleCardNumberInput = (cardNumberInput) => {
     const regex = /^[0-9]*$/;
     const { mask, image } = identifyCardType(cardNumberInput);
     let updatedCardNumber = '';
-
-    if(regex.test(cardNumberInput)){
-    
-      for (let i = 0, j = 0; i < mask.length; i++) {
+    let formattedInput = '';
+    let j = 0;
+  
+    // Remove spaces from the cardNumberInput
+    const cleanedCardNumberInput = cardNumberInput.replace(/\s/g, '');
+  
+    // Check if the input is composed only of digits and spaces
+    if (regex.test(cleanedCardNumberInput)) {
+      for (let i = 0; i < mask.length; i++) {
         if (mask[i] === '#') {
-          updatedCardNumber += cardNumberInput[j] || '#';
-          j++;
-        } else {
-          updatedCardNumber += mask[i];
+          if (j < cleanedCardNumberInput.length) {
+            if (j < 4 || j > 11) {
+              updatedCardNumber += cleanedCardNumberInput[j];
+            } else {
+              updatedCardNumber += '●';
+            }
+            formattedInput += cleanedCardNumberInput[j];
+            j++;
+          } else {
+            updatedCardNumber += '#'; // Placeholder if input is incomplete
+          }
+        } else if (mask[i] === ' ') {
+          updatedCardNumber += ' '; // Add space to cardNumber according to the mask
+          formattedInput += ' '; // Add space to formattedInput for setCardNumberRef
         }
       }
-    
+  
+      // Remove all characters except digits and spaces from formattedInput
+      formattedInput = formattedInput.replace(/[^0-9\s]/g, '');
+  
+      // Trim trailing space if it's at the end of the input
+      formattedInput = formattedInput.replace(/\s+$/, '');
+  
+      // Set the src, updated card number, and formatted card number ref
       setSrc(image);
       setCardNumber(updatedCardNumber);
+      setCardNumberRef(formattedInput);
+    } else {
+      // If the input has characters that are not numbers, remove them
+      setCardNumberRef(cardNumberInput.replace(/[^0-9]/g, ''));
     }
+  };
+  
+  const handleCVVInput = (cvvInput) => {
+    // Remove any non-digit characters
+    const cleanedCVVInput = cvvInput.replace(/[^0-9]/g, '');
+  
+    // Set the display value based on the input length or placeholder
+    const newCVVInput = cleanedCVVInput.length > 0 ? cleanedCVVInput : '';
+  
+    // Update the displayed CVV and the actual input value separately
+    setCvvInput(newCVVInput);
+    setCvv(cleanedCVVInput);
   };
   
   // Function to handle the card holder input
@@ -87,6 +127,8 @@ export default function App() {
     setYear(value.slice(-2));
   }
 
+
+  
   //State to set visibility of card elements
   const [visibleOnCard, setvisibleOnCard] = useState(true);
 
@@ -140,12 +182,13 @@ export default function App() {
 
         <Text style={styles.form_text}>Card Number</Text>
         <TextInput
+        value={cardNumberInputRef}
         style={styles.input}
         onChangeText={cardNumberInput => handleCardNumberInput(cardNumberInput)}
         autoComplete='cc-number'
         inputMode='numeric'
         keyboardType='numeric'
-        maxLength={16}/>
+        maxLength={20}/>
         
         <Text style={styles.form_text}>Card Holder</Text>
         <TextInput
@@ -172,7 +215,8 @@ export default function App() {
             style={styles.inputCVV}
             onFocus={() => {rotateCard(180)}}
             onBlur={() => {rotateCard(0)}}
-            onChangeText={newCVV => setCvv(newCVV)}
+            value={cvvInput}
+            onChangeText={newCVV => handleCVVInput(newCVV)}
             inputMode='numeric'
             keyboardType='numeric'
             maxLength={3}/>
@@ -197,12 +241,11 @@ const styles = StyleSheet.create({
 
   cardcontainer:{
     position: 'relative',
-    width: '80%',
-    maxWidth: 488,
-    height: '26%',
+    width: 300,
+    height: 200,
     backgroundColor: 'gray',
     alignSelf: 'center',
-    top: '13%',
+    top: 100,
     borderRadius: 16,
     overflow: 'hidden',
     zIndex:100,
@@ -224,7 +267,7 @@ const styles = StyleSheet.create({
   },
 
   form:{
-    height: '50%',
+    height: 400,
     width: '90%',
     maxWidth: 550,
     maxHeight: 450,
